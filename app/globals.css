@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-mono antialiased;
+  }
+}
+
+/* Brutalist baseline: hard edges, no smoothing. */
+html {
+  -webkit-font-smoothing: antialiased;
+}
