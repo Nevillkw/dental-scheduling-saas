@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import { getServiceClient } from "@/lib/supabase/service";
+import { getDictionary, getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  const locale = getLocaleFromCookie(cookies().get(LOCALE_COOKIE)?.value);
+  const t = getDictionary(locale);
+
   let tenants: { slug: string; name: string }[] = [];
   let configError = false;
 
@@ -21,41 +27,35 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-16">
-      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-        Multi-tenant SaaS · demo
-      </p>
-      <h1 className="mt-1 text-4xl font-bold uppercase tracking-tight">
-        Dental // Rezerwacje
-      </h1>
-      <p className="mt-4 max-w-prose text-sm">
-        Każda klinika to osobny tenant pod ścieżką <code>/[slug]</code>. Izolacja
-        twarda po RLS, rezerwacje atomowe (partial unique index), dostępność na
-        żywo (Broadcast), płatność przez Stripe Checkout.
-      </p>
+      <div className="mb-1 flex items-start justify-between gap-4">
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          {t.home.badge}
+        </p>
+        <LanguageSwitcher locale={locale} />
+      </div>
+      <h1 className="text-4xl font-bold uppercase tracking-tight">{t.home.title}</h1>
+      <p className="mt-4 max-w-prose text-sm">{t.home.intro}</p>
 
       <h2 className="mt-10 border-b-2 border-border pb-2 text-sm font-bold uppercase tracking-wide">
-        Kliniki
+        {t.home.clinicsHeading}
       </h2>
 
       {configError ? (
         <p className="mt-4 border-2 border-border bg-secondary p-4 text-sm">
-          Brak konfiguracji Supabase. Uzupełnij <code>.env.local</code> i wykonaj{" "}
-          <code>supabase/schema.sql</code> + <code>seed.sql</code>.
+          {t.home.configError}
         </p>
       ) : tenants.length === 0 ? (
-        <p className="mt-4 border-2 border-border p-4 text-sm">
-          Brak tenantów. Uruchom <code>supabase/seed.sql</code>.
-        </p>
+        <p className="mt-4 border-2 border-border p-4 text-sm">{t.home.noTenants}</p>
       ) : (
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-          {tenants.map((t) => (
-            <li key={t.slug}>
+          {tenants.map((tenant) => (
+            <li key={tenant.slug}>
               <Link
-                href={`/${t.slug}`}
+                href={`/${tenant.slug}`}
                 className="flex items-center justify-between border-2 border-border p-4 shadow-brutal-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
               >
-                <span className="font-bold uppercase tracking-wide">{t.name}</span>
-                <span className="text-xs text-muted-foreground">/{t.slug} →</span>
+                <span className="font-bold uppercase tracking-wide">{tenant.name}</span>
+                <span className="text-xs text-muted-foreground">/{tenant.slug} →</span>
               </Link>
             </li>
           ))}

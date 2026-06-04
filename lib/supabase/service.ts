@@ -1,10 +1,9 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Klient #3: SERVICE-ROLE.
- * Uzywany WYLACZNIE po stronie serwera (Server Actions + webhook Stripe).
- * Omija RLS — autorytatywnie tlumaczy slug -> tenant_id i zapisuje bookingi.
- * Nigdy nie importowac do kodu klienckiego.
+ * Client #3: SERVICE-ROLE.
+ * Server-only (Server Actions + Stripe webhook). Bypasses RLS — authoritatively
+ * translates slug -> tenant_id and writes bookings. Never import into client code.
  */
 let cached: SupabaseClient | null = null;
 
@@ -15,7 +14,7 @@ export function getServiceClient(): SupabaseClient {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) {
     throw new Error(
-      "Brak konfiguracji: NEXT_PUBLIC_SUPABASE_URL i/lub SUPABASE_SERVICE_ROLE_KEY."
+      "Missing config: NEXT_PUBLIC_SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY."
     );
   }
 

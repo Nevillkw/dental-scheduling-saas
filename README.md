@@ -1,40 +1,44 @@
 # Dental Scheduling SaaS — multi-tenant
 
+**Language:** English · [Polski](./README.pl.md)
+
 **Live:** https://dental-scheduling-saas.vercel.app · **Repo:** https://github.com/Nevillkw/dental-scheduling-saas
 
-Production-ready rdzeń systemu rezerwacji wizyt dla wielu klinik (multi-tenant),
-zbudowany wg [`SPEC.md`](./SPEC.md). Demonstruje 4 kompetencje:
+A production-ready core of a multi-tenant dental appointment booking system, built per
+[`SPEC.md`](./SPEC.md). It demonstrates 4 competencies:
 
 1. **App Router** (Next.js 14, Server Components + Server Actions)
-2. **Strict multi-tenant isolation** — twardo po RLS na claimie JWT
-3. **Atomic double-booking prevention** — partial unique index + JIT staleness w transakcji
-4. **Real-time UI** — Supabase Broadcast per-tenant
+2. **Strict multi-tenant isolation** — hard, enforced by RLS on a JWT claim
+3. **Atomic double-booking prevention** — partial unique index + JIT staleness in a transaction
+4. **Real-time UI** — Supabase Broadcast per tenant
+
+The UI ships **bilingual (PL/EN)** with a switcher (cookie-persisted locale).
 
 ## Stack
 
 - Next.js 14 (App Router, TypeScript)
 - Supabase (Postgres + Auth + Realtime)
-- Tailwind + komponenty w stylu shadcn/ui (brutalist: czarno-biało-szary, kwadratowy)
+- Tailwind + shadcn/ui-style components (brutalist: black/white/gray, square)
 - Stripe Checkout (Test Mode)
 
 ---
 
-## Architektura w skrócie
+## Architecture at a glance
 
-| Obszar | Decyzja |
+| Area | Decision |
 |---|---|
-| **Routing tenantów** | Ścieżka `/[slug]/...` (dynamiczny segment App Routera). |
-| **Auth / RLS** | Hybryda. Personel: Supabase Auth, `tenant_id` w `app_metadata` → JWT → RLS. Pacjent: anonimowy, obsługiwany przez **Server Actions** (serwer tłumaczy slug → `tenant_id`). |
-| **Sloty** | Grid ze stałej konfiguracji (Pon–Pt 9:00–17:00, co 30 min, `Europe/Warsaw`). Dostępność = grid − aktywne bookingi. Brak tabeli grafików. |
-| **Double-booking** | Partial unique index `(tenant_id, doctor_id, start_time) WHERE status IN ('pending','confirmed')` + JIT expire w RPC `book_slot` (jedna transakcja). Bez crona/workerów. |
-| **Booking ⇄ Stripe** | INSERT `pending` (rezerwacja przez index) **przed** redirectem do Stripe. Drugi równoległy klient odbija się od indeksu. |
-| **Realtime** | **Broadcast** per-tenant (`clinic:{tenantId}:doctor:{doctorId}`), nie `postgres_changes`. Anon nie czyta tabel. |
-| **Webhook** | Surowe body + `constructEvent` (podpis + 300 s tolerancji ⇒ ochrona przed replay). Service-role. Guarded idempotent UPDATE `WHERE stripe_session_id=$ AND status='pending'`. |
+| **Tenant routing** | `/[slug]/...` path (App Router dynamic segment). |
+| **Auth / RLS** | Hybrid. Staff: Supabase Auth, `tenant_id` in `app_metadata` → JWT → RLS. Patient: anonymous, handled by **Server Actions** (the server translates slug → `tenant_id`). |
+| **Slots** | Grid from a static config (Mon–Fri 9:00–17:00, every 30 min, `Europe/Warsaw`). Availability = grid − active bookings. No schedule table. |
+| **Double-booking** | Partial unique index `(tenant_id, doctor_id, start_time) WHERE status IN ('pending','confirmed')` + JIT expire inside the `book_slot` RPC (single transaction). No cron/workers. |
+| **Booking ⇄ Stripe** | INSERT `pending` (reserved via the index) **before** redirecting to Stripe. A second concurrent client bounces off the index. |
+| **Realtime** | **Broadcast** per tenant (`clinic:{tenantId}:doctor:{doctorId}`), not `postgres_changes`. Anon reads no tables. |
+| **Webhook** | Raw body + `constructEvent` (signature + 300s tolerance ⇒ replay protection). Service-role. Guarded idempotent UPDATE `WHERE stripe_session_id=$ AND status='pending'`. |
 
-**3 klienty Supabase:**
-- `lib/supabase/client.ts` — **anon** (przeglądarka): tylko subskrypcja Broadcast.
-- `lib/supabase/server.ts` — **authenticated** (personel, SSR cookies): bezpośredni odczyt z RLS.
-- `lib/supabase/service.ts` — **service-role** (Server Actions + webhook): omija RLS.
+**3 Supabase clients:**
+- `lib/supabase/client.ts` — **anon** (browser): Broadcast subscription only.
+- `lib/supabase/server.ts` — **authenticated** (staff, SSR cookies): direct read under RLS.
+- `lib/supabase/service.ts` — **service-role** (Server Actions + webhook): bypasses RLS.
 
 ---
 
@@ -42,43 +46,43 @@ zbudowany wg [`SPEC.md`](./SPEC.md). Demonstruje 4 kompetencje:
 
 ### 1. Supabase
 
-1. Utwórz projekt na [supabase.com](https://supabase.com).
-2. **SQL Editor** → wklej i uruchom [`supabase/schema.sql`](./supabase/schema.sql) (review przed apply!).
-3. Uruchom [`supabase/seed.sql`](./supabase/seed.sql) — tworzy 2 tenanty (`klinika-alfa`, `klinika-beta`) i lekarzy.
-4. **Konta personelu** (brak UI tożsamości — zakładane ręcznie):
-   - **Authentication → Users → Add user**, np. `alfa@klinika.test` / hasło, zaznacz *Auto Confirm User*. Powtórz dla `beta@klinika.test`.
-   - Powiąż konto z tenantem (snippet jest na końcu `seed.sql`):
+1. Create a project at [supabase.com](https://supabase.com).
+2. **SQL Editor** → paste and run [`supabase/schema.sql`](./supabase/schema.sql) (review before apply!).
+3. Run [`supabase/seed.sql`](./supabase/seed.sql) — creates 2 tenants (`klinika-alfa`, `klinika-beta`) and doctors.
+4. **Staff accounts** (no identity UI — created manually):
+   - **Authentication → Users → Add user**, e.g. `alfa@klinika.test` / password, tick *Auto Confirm User*. Repeat for `beta@klinika.test`.
+   - Link the account to a tenant (snippet at the end of `seed.sql`):
      ```sql
      update auth.users
      set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
          || jsonb_build_object('tenant_id', (select id from tenants where slug = 'klinika-alfa'))
      where email = 'alfa@klinika.test';
      ```
-   - Po zmianie `app_metadata` użytkownik musi zalogować się **ponownie** (nowy JWT z claimem).
-5. **Realtime / Broadcast** działa domyślnie — kanały są publiczne, nie wymaga dodatkowej konfiguracji.
-6. Skopiuj z **Project Settings → API**: `Project URL`, `anon public key`, `service_role key` → wklej do `.env.local`.
+   - After changing `app_metadata` the user must sign in **again** (new JWT with the claim).
+5. **Realtime / Broadcast** works out of the box — channels are public, no extra config.
+6. From **Project Settings → API** copy `Project URL`, `anon public key`, `service_role key` → into `.env.local`.
 
 ### 2. Stripe (Test Mode)
 
-1. [dashboard.stripe.com](https://dashboard.stripe.com) → tryb **Test**.
-2. Skopiuj **Secret key** (`sk_test_...`) → `STRIPE_SECRET_KEY`.
-3. Webhook (lokalnie) — [Stripe CLI](https://stripe.com/docs/stripe-cli):
+1. [dashboard.stripe.com](https://dashboard.stripe.com) → **Test** mode.
+2. Copy the **Secret key** (`sk_test_...`) → `STRIPE_SECRET_KEY`.
+3. Webhook (local) — [Stripe CLI](https://stripe.com/docs/stripe-cli):
    ```bash
    stripe login
    stripe listen --forward-to localhost:3000/api/webhooks/stripe
    ```
-   CLI wypisze `whsec_...` — to `STRIPE_WEBHOOK_SECRET`.
-   (Produkcja: **Developers → Webhooks → Add endpoint** → `https://twoja-domena/api/webhooks/stripe`, zdarzenia `checkout.session.completed`, `checkout.session.expired`.)
+   The CLI prints `whsec_...` — that is `STRIPE_WEBHOOK_SECRET`.
+   (Production: **Developers → Webhooks → Add endpoint** → `https://your-domain/api/webhooks/stripe`, events `checkout.session.completed`, `checkout.session.expired`.)
 
-### 3. Env + uruchomienie
+### 3. Env + run
 
 ```bash
-cp .env.local.example .env.local   # uzupełnij wartości
+cp .env.local.example .env.local   # fill in the values
 npm install
 npm run dev
 ```
 
-Wymagane zmienne (`.env.local`):
+Required variables (`.env.local`):
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=
@@ -89,82 +93,95 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-Otwórz:
-- `http://localhost:3000` — lista klinik
-- `http://localhost:3000/klinika-alfa` — publiczny kalendarz rezerwacji
-- `http://localhost:3000/klinika-alfa/staff` — panel personelu (read-only)
+Open:
+- `http://localhost:3000` — list of clinics
+- `http://localhost:3000/klinika-alfa` — public booking calendar
+- `http://localhost:3000/klinika-alfa/staff` — staff panel (read-only)
 
-Karta testowa Stripe: `4242 4242 4242 4242`, dowolna przyszła data, dowolny CVC.
+Stripe test card: `4242 4242 4242 4242`, any future date, any CVC.
+
+A quick end-to-end check of the booking logic (no UI):
+```bash
+node --env-file=.env.local scripts/full-loop-test.mjs
+```
 
 ---
 
-## Jak to działa
+## How it works
 
-### Flow rezerwacji (anon → Server Action `createBooking`)
-1. Server Action tłumaczy `slug → tenant_id`, waliduje lekarza i slot (anti-tamper wobec gridu).
-2. RPC `book_slot` w **jednej transakcji**: JIT-expire wygasłej blokady na tym slocie → INSERT `pending` (`expires_at = now()+15min`). Partial unique index ⇒ `23505` = „slot zajęty".
-3. Tworzona jest Stripe Checkout Session (`metadata.booking_id`, `client_reference_id`), `session.id` zapisywany na wierszu.
-4. **Broadcast** `{ start_time }` (event `taken`) → slot znika u innych klientów na żywo.
-5. Redirect do Stripe.
+### Booking flow (anonymous → `createBooking` Server Action)
+1. The Server Action translates `slug → tenant_id`, validates the doctor and the slot (anti-tamper against the grid).
+2. The `book_slot` RPC, in a **single transaction**: JIT-expire an expired hold on this slot → INSERT `pending` (`expires_at = now()+15min`). The partial unique index ⇒ `23505` = "slot taken".
+3. A Stripe Checkout Session is created (`metadata.booking_id`, `client_reference_id`); `session.id` is saved on the row.
+4. **Broadcast** `{ start_time }` (event `taken`) → the slot disappears for other clients live.
+5. Redirect to Stripe.
 
-### Flow webhooka (`/api/webhooks/stripe`)
-- `checkout.session.completed` → **guarded idempotent UPDATE** `status='confirmed' WHERE stripe_session_id=$ AND status='pending'`. Replay = 0 wierszy, brak skutków. 0 wierszy + wiersz w `expired` ⇒ log `paid-after-expiry`.
+### Webhook flow (`/api/webhooks/stripe`)
+- `checkout.session.completed` → **guarded idempotent UPDATE** `status='confirmed' WHERE stripe_session_id=$ AND status='pending'`. Replay = 0 rows, no effect. 0 rows + a row in `expired` ⇒ log `paid-after-expiry`.
 - `checkout.session.expired` *(nice-to-have)* → `pending` → `expired` + Broadcast `freed`.
-- Zły podpis ⇒ 400. Błąd przejściowy ⇒ 500 (Stripe ponawia). OK ⇒ 200.
+- Bad signature ⇒ 400. Transient error ⇒ 500 (Stripe retries). OK ⇒ 200.
 
-### Panel personelu
-Logowanie e-mail/hasło (Supabase Auth, SSR cookies) → read-only tabela nadchodzących wizyt. Odczyt **bezpośredni** przez authenticated client; **RLS-JWT** gwarantuje, że `klinika-alfa` nie widzi danych `klinika-beta`. Bez realtime, bez CRUD.
+### Staff panel
+Email/password sign-in (Supabase Auth, SSR cookies) → read-only table of upcoming appointments. **Direct** read via the authenticated client; **RLS-JWT** guarantees `klinika-alfa` cannot see `klinika-beta` data. No realtime, no CRUD.
+
+### Internationalization (PL/EN)
+A cookie (`locale`) holds the language; Server Components read it and pass the dictionary slice down (`lib/i18n.ts`). The `LanguageSwitcher` flips the cookie and `router.refresh()`-es. Server Action error messages are localized too. No external i18n dependency.
 
 ---
 
 ## Deployment (Vercel)
 
-Live: **https://dental-scheduling-saas.vercel.app** (wdrożone przez `vercel --prod`).
+Live: **https://dental-scheduling-saas.vercel.app** (deployed via `vercel --prod`).
 
-Zmienne środowiskowe ustawione w projekcie Vercel (Production): `NEXT_PUBLIC_SUPABASE_URL`,
+Environment variables set in the Vercel project (Production): `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`,
 `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_APP_URL`.
 
-- **Webhook produkcyjny** to osobny endpoint w Stripe (Test Mode) na
-  `https://<domena>/api/webhooks/stripe` (zdarzenia `checkout.session.completed`,
-  `checkout.session.expired`). Jego `whsec` to **inny** sekret niż lokalny `stripe listen`.
-- `success_url` / `cancel_url` liczone są z nagłówków żądania, więc działają na każdej
-  domenie Vercel (produkcja i preview).
-- **Auto-deploy z GitHuba:** zainstaluj aplikację Vercel dla repo w *Settings → Git*
-  (repo jest pod kontem GitHub innym niż team Vercel — wymaga ręcznej autoryzacji).
-  Bez tego wdrażasz CLI: `vercel --prod`.
+- The **production webhook** is a separate endpoint in Stripe (Test Mode) at
+  `https://<domain>/api/webhooks/stripe` (events `checkout.session.completed`,
+  `checkout.session.expired`). Its `whsec` is a **different** secret than the local `stripe listen`.
+- `success_url` / `cancel_url` are derived from request headers, so they work on any Vercel
+  domain (production and preview).
+- **GitHub auto-deploy:** install the Vercel GitHub App for the repo under *Settings → Git*
+  (the repo is under a different GitHub account than the Vercel team — needs manual authorization).
+  Without it, deploy via CLI: `vercel --prod`.
 
 ---
 
 ## Known Limitations & Enterprise Upgrade Path
 
-- **Paid-after-expiry refund** — wykrywany i logowany; automatyczny `stripe.refunds.create` świadomie odłożony poza MVP.
-- **Grafiki per-lekarz** — obecnie globalna stała godzin pracy (`lib/slots.ts`).
-- **Subdomeny tenantów** (`klinika.app.com`) — wymaga planu Pro + wildcard DNS; tu routing po ścieżce.
-- **Private Realtime channels** — Broadcast jest publiczny (payload bez PII, tylko `start_time`); autoryzacja kanałów = upgrade.
-- **„Freed" broadcast po wygaśnięciu `pending`** — slot wraca u innych klientów dopiero przy odświeżeniu / następnej próbie rezerwacji (lub przez `checkout.session.expired`). Dla świeżości, kalendarz traktuje `pending` z `expires_at < now()` jako wolny (JIT i tak zwolni go atomowo przy rezerwacji).
+- **Paid-after-expiry refund** — detected and logged; automatic `stripe.refunds.create` deliberately deferred beyond the MVP.
+- **Per-doctor schedules** — currently a global working-hours constant (`lib/slots.ts`).
+- **Tenant subdomains** (`clinic.app.com`) — requires Pro + wildcard DNS; this uses path routing.
+- **Private Realtime channels** — Broadcast is public (payload without PII, only `start_time`); channel authorization is an upgrade.
+- **"Freed" broadcast after a `pending` expires** — the slot returns for other clients only on refresh / the next booking attempt (or via `checkout.session.expired`). For freshness, the calendar treats `pending` with `expires_at < now()` as free (the JIT step frees it atomically on booking anyway).
 
 ---
 
-## Struktura
+## Structure
 
 ```
 app/
-  page.tsx                      # lista klinik
+  page.tsx                      # list of clinics
   [slug]/
-    page.tsx                    # publiczny kalendarz (Server Component)
-    BookingCalendar.tsx         # client: realtime Broadcast + formularz
+    page.tsx                    # public calendar (Server Component)
+    BookingCalendar.tsx         # client: realtime Broadcast + form
     actions.ts                  # Server Action: book_slot → Stripe → broadcast
-    success/ , cancel/          # powroty ze Stripe Checkout
-    staff/                      # logowanie + read-only tabela (RLS)
+    success/ , cancel/          # returns from Stripe Checkout
+    staff/                      # sign-in + read-only table (RLS)
   api/webhooks/stripe/route.ts  # webhook (raw body, constructEvent, idempotent)
 lib/
-  supabase/                     # 3 klienty + middleware + broadcast (REST)
-  slots.ts                      # grid Pon–Pt 9–17, Europe/Warsaw → UTC
-  stripe.ts                     # lazy Stripe client + cena
-components/ui/                   # button/input/label/card/table (brutalist)
+  supabase/                     # 3 clients + middleware + broadcast (REST)
+  slots.ts                      # grid Mon–Fri 9–17, Europe/Warsaw → UTC
+  stripe.ts                     # lazy Stripe client + price
+  i18n.ts                       # PL/EN dictionaries + helpers
+components/
+  ui/                           # button/input/label/card/table (brutalist)
+  LanguageSwitcher.tsx          # PL/EN toggle (cookie + refresh)
 supabase/
-  schema.sql                    # tabele + index + RLS + RPC book_slot
-  seed.sql                      # 2 tenanty + lekarze + instrukcja kont
-middleware.ts                    # odświeżanie sesji personelu
+  schema.sql                    # tables + index + RLS + book_slot RPC
+  seed.sql                      # 2 tenants + doctors + staff-account instructions
+scripts/
+  full-loop-test.mjs            # end-to-end logic test
+middleware.ts                    # staff session refresh
 ```

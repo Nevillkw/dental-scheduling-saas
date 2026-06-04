@@ -3,9 +3,9 @@
 import { createBrowserClient } from "@supabase/ssr";
 
 /**
- * Klient #1: ANON (przegladarka).
- * Uzywany WYLACZNIE do subskrypcji kanalow Broadcast (realtime).
- * Anon nie ma zadnych polityk RLS => nie czyta zadnych tabel.
+ * Client #1: ANON (browser).
+ * Used ONLY to subscribe to Broadcast channels (realtime).
+ * Anon has no RLS policies => it reads no tables.
  */
 export function createSupabaseBrowserClient() {
   return createBrowserClient(

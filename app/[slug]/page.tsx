@@ -1,20 +1,25 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { getServiceClient } from "@/lib/supabase/service";
 import { generateGrid } from "@/lib/slots";
+import { getDictionary, getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { BookingCalendar } from "./BookingCalendar";
 
-// Dane zalezne od czasu i bazy — bez prerenderu statycznego.
+// Time- and DB-dependent — no static prerender.
 export const dynamic = "force-dynamic";
 
 type PageProps = { params: { slug: string } };
 
 export default async function ClinicPage({ params }: PageProps) {
   const { slug } = params;
+  const locale = getLocaleFromCookie(cookies().get(LOCALE_COOKIE)?.value);
+  const t = getDictionary(locale);
   const supabase = getServiceClient();
 
-  // 1) Slug -> tenant (autorytatywnie, service-role).
+  // 1) slug -> tenant (authoritative, service-role).
   const { data: tenant } = await supabase
     .from("tenants")
     .select("id, name")
@@ -22,18 +27,18 @@ export default async function ClinicPage({ params }: PageProps) {
     .maybeSingle();
   if (!tenant) notFound();
 
-  // 2) Lekarze tenanta.
+  // 2) Tenant's doctors.
   const { data: doctors } = await supabase
     .from("doctors")
     .select("id, name")
     .eq("tenant_id", tenant.id)
     .order("name", { ascending: true });
 
-  // 3) Grid (stala konfiguracja, przyszle sloty).
-  const days = generateGrid();
+  // 3) Grid (static config, future slots).
+  const days = generateGrid(locale);
 
-  // 4) Aktywne bookingi (dostepnosc = grid - aktywne).
-  //    "Aktywny" = confirmed LUB (pending i jeszcze niewygasly).
+  // 4) Active bookings (availability = grid - active).
+  //    "Active" = confirmed OR (pending and not yet expired).
   const nowIso = new Date().toISOString();
   const { data: bookings } = await supabase
     .from("bookings")
@@ -46,7 +51,7 @@ export default async function ClinicPage({ params }: PageProps) {
   const initialTaken: string[] = (bookings ?? [])
     .filter((b) => {
       if (b.status === "confirmed") return true;
-      // pending liczy sie tylko gdy blokada wciaz wazna (inaczej JIT go zwolni).
+      // pending only counts while the hold is still valid (otherwise JIT frees it).
       return b.expires_at != null && new Date(b.expires_at as string).getTime() > now;
     })
     .map(
@@ -56,25 +61,26 @@ export default async function ClinicPage({ params }: PageProps) {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <header className="mb-8 flex items-end justify-between border-b-2 border-border pb-4">
+      <header className="mb-8 flex items-end justify-between gap-4 border-b-2 border-border pb-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Rezerwacja wizyty
+            {t.clinic.bookingHeading}
           </p>
           <h1 className="text-3xl font-bold uppercase tracking-tight">{tenant.name}</h1>
         </div>
-        <Link
-          href={`/${slug}/staff`}
-          className="border-2 border-border px-3 py-2 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
-        >
-          Panel personelu →
-        </Link>
+        <div className="flex items-center gap-3">
+          <LanguageSwitcher locale={locale} />
+          <Link
+            href={`/${slug}/staff`}
+            className="border-2 border-border px-3 py-2 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+          >
+            {t.clinic.staffPanelLink}
+          </Link>
+        </div>
       </header>
 
       {!doctors || doctors.length === 0 ? (
-        <p className="border-2 border-border p-4 text-sm">
-          Brak lekarzy w tej klinice.
-        </p>
+        <p className="border-2 border-border p-4 text-sm">{t.clinic.noDoctors}</p>
       ) : (
         <BookingCalendar
           slug={slug}
@@ -82,6 +88,8 @@ export default async function ClinicPage({ params }: PageProps) {
           doctors={doctors}
           days={days}
           initialTaken={initialTaken}
+          locale={locale}
+          dict={t}
         />
       )}
     </main>

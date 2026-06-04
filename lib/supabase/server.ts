@@ -4,9 +4,9 @@ import { cookies } from "next/headers";
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 /**
- * Klient #2: AUTHENTICATED (personel).
- * Cookie-based SSR. RLS dziala po claimie app_metadata.tenant_id z JWT,
- * wiec personel `clinic-a` nie widzi danych `clinic-b`.
+ * Client #2: AUTHENTICATED (staff).
+ * Cookie-based SSR. RLS works off the app_metadata.tenant_id claim in the JWT,
+ * so `clinic-a` staff cannot see `clinic-b` data.
  */
 export function createSupabaseServerClient() {
   const cookieStore = cookies();
@@ -25,8 +25,8 @@ export function createSupabaseServerClient() {
             cookieStore.set(name, value, options)
           );
         } catch {
-          // Wywolane z Server Component bez mozliwosci zapisu cookies — ignorujemy.
-          // Odswiezenie sesji obsluguje middleware.
+          // Called from a Server Component that cannot write cookies — ignore.
+          // Session refresh is handled by the middleware.
         }
       },
     },

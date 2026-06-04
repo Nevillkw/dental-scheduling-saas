@@ -5,7 +5,7 @@ import { getStripe } from "@/lib/stripe";
 import { getServiceClient } from "@/lib/supabase/service";
 import { broadcastSlot } from "@/lib/supabase/broadcast";
 
-// Stripe SDK wymaga Node runtime; surowe body czytamy req.text().
+// The Stripe SDK needs the Node runtime; we read the raw body via req.text().
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -13,18 +13,18 @@ export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature");
   const whsec = process.env.STRIPE_WEBHOOK_SECRET;
   if (!sig || !whsec) {
-    return new Response("Brak podpisu/sekretu webhooka.", { status: 400 });
+    return new Response("Missing webhook signature/secret.", { status: 400 });
   }
 
-  // SUROWE body — wymagane do weryfikacji podpisu (constructEvent).
+  // RAW body — required to verify the signature (constructEvent).
   const rawBody = await req.text();
 
   let event: Stripe.Event;
   try {
-    // constructEvent: podpis + tolerancja 300s => ochrona przed replay.
+    // constructEvent: signature + 300s tolerance => replay protection out of the box.
     event = getStripe().webhooks.constructEvent(rawBody, sig, whsec);
   } catch {
-    return new Response("Nieprawidlowy podpis.", { status: 400 });
+    return new Response("Invalid signature.", { status: 400 });
   }
 
   const supabase = getServiceClient();
@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session;
       const sid = session.id;
 
-      // GUARDED IDEMPOTENT UPDATE: confirm tylko jesli wciaz pending.
-      // Replay/duplikat => 0 wierszy, brak skutkow ubocznych.
+      // GUARDED IDEMPOTENT UPDATE: confirm only while still pending.
+      // Replay/duplicate => 0 rows, no side effects.
       const { data, error } = await supabase
         .from("bookings")
         .update({ status: "confirmed" })
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       if (error) throw error;
 
       if (!data || data.length === 0) {
-        // 0 wierszy: albo juz confirmed (replay), albo paid-after-expiry.
+        // 0 rows: either already confirmed (replay), or paid-after-expiry.
         const { data: row } = await supabase
           .from("bookings")
           .select("id, status")
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
           .maybeSingle();
 
         if (row && row.status === "expired") {
-          // EDGE: zaplacil po wygasnieciu. Logujemy; refund udokumentowany w README.
+          // EDGE: paid after the hold expired. Log it; refund is documented in the README.
           console.error("[stripe webhook] paid-after-expiry", {
             stripe_session_id: sid,
             booking_id: row.id,
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
         }
       }
     } else if (event.type === "checkout.session.expired") {
-      // NICE-TO-HAVE: zwolnij pending i wyemituj "freed".
+      // NICE-TO-HAVE: free the pending slot and emit "freed".
       const session = event.data.object as Stripe.Checkout.Session;
       const sid = session.id;
 
@@ -84,8 +84,8 @@ export async function POST(req: NextRequest) {
       }
     }
   } catch {
-    // Blad przejsciowy => 500 => Stripe ponowi dostawe.
-    return new Response("Blad obslugi webhooka.", { status: 500 });
+    // Transient error => 500 => Stripe retries delivery.
+    return new Response("Webhook handler error.", { status: 500 });
   }
 
   return new Response("ok", { status: 200 });

@@ -1,12 +1,12 @@
 -- =============================================================================
--- Multi-tenant Dental Scheduling — SCHEMA (review przed apply: Step 2)
--- Uruchom w Supabase: SQL Editor -> wklej -> Run.
+-- Multi-tenant Dental Scheduling — SCHEMA (review before apply: Step 2)
+-- Run in Supabase: SQL Editor -> paste -> Run.
 -- =============================================================================
 
 create type booking_status as enum ('pending', 'confirmed', 'expired', 'refunded');
 
 -- ---------------------------------------------------------------------------
--- Tabele
+-- Tables
 -- ---------------------------------------------------------------------------
 create table tenants (
   id         uuid primary key default gen_random_uuid(),
@@ -31,17 +31,17 @@ create table bookings (
   start_time        timestamptz not null,
   status            booking_status not null default 'pending',
   stripe_session_id text unique,
-  expires_at        timestamptz,                 -- ustawiany dla 'pending' = now()+15min
+  expires_at        timestamptz,                 -- set for 'pending' = now()+15min
   created_at        timestamptz not null default now()
 );
 
--- ATOMOWY STRAZNIK: co najwyzej jeden AKTYWNY booking na slot.
--- Predykat statyczny => IMMUTABLE-safe (BEZ now()!).
+-- ATOMIC GUARD: at most one ACTIVE booking per slot.
+-- Static predicate => IMMUTABLE-safe (NO now()!).
 create unique index unique_active_booking
   on bookings (tenant_id, doctor_id, start_time)
   where status in ('pending', 'confirmed');
 
-create index bookings_status_expires_idx on bookings (status, expires_at);  -- pod JIT sweep
+create index bookings_status_expires_idx on bookings (status, expires_at);  -- for the JIT sweep
 create index bookings_lookup_idx on bookings (tenant_id, doctor_id, start_time);
 
 -- ---------------------------------------------------------------------------
@@ -62,13 +62,13 @@ create policy staff_read_doctors on doctors for select to authenticated
 create policy staff_read_bookings on bookings for select to authenticated
   using (tenant_id = (auth.jwt() -> 'app_metadata' ->> 'tenant_id')::uuid);
 
--- anon: ZERO polityk => default deny. service_role omija RLS (Server Actions + webhook).
+-- anon: ZERO policies => default deny. service_role bypasses RLS (Server Actions + webhook).
 
 -- ---------------------------------------------------------------------------
--- RPC: atomowy booking w JEDNEJ transakcji.
--- Krok 1 (JIT): zwolnij wygasla blokade dokladnie na tym slocie.
--- Krok 2: zarezerwuj. Partial unique index => 23505 gdy slot zajety.
--- Wywolywane wylacznie przez service_role z Server Action.
+-- RPC: atomic booking inside a SINGLE transaction.
+-- Step 1 (JIT): free an expired hold on exactly this slot.
+-- Step 2: reserve. The partial unique index => 23505 when the slot is taken.
+-- Called only by service_role from the Server Action.
 -- ---------------------------------------------------------------------------
 create or replace function book_slot(
   p_tenant_id   uuid,
@@ -96,6 +96,6 @@ begin
 end;
 $$;
 
--- Tylko service_role moze rezerwowac. Anon/authenticated nie maja dostepu.
+-- Only service_role may reserve. anon/authenticated have no access.
 revoke all on function book_slot(uuid, uuid, text, timestamptz) from public;
 grant execute on function book_slot(uuid, uuid, text, timestamptz) to service_role;

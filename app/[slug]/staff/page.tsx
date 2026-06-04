@@ -1,8 +1,11 @@
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getServiceClient } from "@/lib/supabase/service";
 import { formatSlotLabel } from "@/lib/slots";
+import { getDictionary, getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   Table,
   TableBody,
@@ -33,8 +36,10 @@ function doctorName(d: BookingRow["doctors"]): string {
 
 export default async function StaffPage({ params }: Props) {
   const { slug } = params;
+  const locale = getLocaleFromCookie(cookies().get(LOCALE_COOKIE)?.value);
+  const t = getDictionary(locale);
 
-  // Sprawdz, czy slug w ogole istnieje (service-role, bez RLS).
+  // Check the slug exists at all (service-role, no RLS).
   const svc = getServiceClient();
   const { data: tenant } = await svc
     .from("tenants")
@@ -48,30 +53,33 @@ export default async function StaffPage({ params }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Niezalogowany => formularz logowania.
+  // Not signed in => login form.
   if (!user) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-4">
-        <LoginForm slug={slug} />
+      <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-4 px-4">
+        <div className="flex w-full max-w-sm justify-end">
+          <LanguageSwitcher locale={locale} />
+        </div>
+        <LoginForm slug={slug} dict={t.staff} />
       </main>
     );
   }
 
-  // Zalogowany, ale claim tenant_id != tenant tego slugu => odmowa.
-  // RLS i tak nie pokaze cudzych danych; to czytelny komunikat.
+  // Signed in, but the claim tenant_id != this slug's tenant => deny.
+  // RLS would hide other tenants' data anyway; this is a clear message.
   const claimTenant = (user.app_metadata as { tenant_id?: string } | undefined)?.tenant_id;
   if (claimTenant !== tenant.id) {
     return (
       <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-4 px-4 text-center">
         <div className="border-2 border-border p-8 shadow-brutal">
-          <h1 className="text-2xl font-bold uppercase">Brak dostepu</h1>
+          <h1 className="text-2xl font-bold uppercase">{t.staff.accessDenied}</h1>
           <p className="mt-2 text-sm">
-            To konto nie nalezy do kliniki <strong>{tenant.name}</strong>.
+            {t.staff.accessDeniedBody.replace("{clinic}", tenant.name)}
           </p>
           <form action={signOut} className="mt-4">
             <input type="hidden" name="slug" value={slug} />
             <Button type="submit" variant="outline">
-              Wyloguj
+              {t.common.logout}
             </Button>
           </form>
         </div>
@@ -79,7 +87,7 @@ export default async function StaffPage({ params }: Props) {
     );
   }
 
-  // Odczyt BEZPOSREDNI przez authenticated client — RLS-JWT gwarantuje izolacje.
+  // DIRECT read via the authenticated client — RLS-JWT guarantees isolation.
   const nowIso = new Date().toISOString();
   const { data: bookings, error } = await supabase
     .from("bookings")
@@ -90,46 +98,45 @@ export default async function StaffPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <header className="mb-6 flex items-end justify-between border-b-2 border-border pb-4">
+      <header className="mb-6 flex items-end justify-between gap-4 border-b-2 border-border pb-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Panel personelu · {user.email}
+            {t.staff.panelLabel.replace("{email}", user.email ?? "")}
           </p>
           <h1 className="text-3xl font-bold uppercase tracking-tight">{tenant.name}</h1>
         </div>
-        <form action={signOut}>
-          <input type="hidden" name="slug" value={slug} />
-          <Button type="submit" variant="outline">
-            Wyloguj
-          </Button>
-        </form>
+        <div className="flex items-center gap-3">
+          <LanguageSwitcher locale={locale} />
+          <form action={signOut}>
+            <input type="hidden" name="slug" value={slug} />
+            <Button type="submit" variant="outline">
+              {t.common.logout}
+            </Button>
+          </form>
+        </div>
       </header>
 
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide">
-        Nadchodzace wizyty
-      </h2>
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide">{t.staff.upcoming}</h2>
 
       {error ? (
-        <p className="border-2 border-border p-4 text-sm">
-          Blad odczytu danych.
-        </p>
+        <p className="border-2 border-border p-4 text-sm">{t.staff.readError}</p>
       ) : !bookings || bookings.length === 0 ? (
-        <p className="border-2 border-border p-4 text-sm">Brak nadchodzacych wizyt.</p>
+        <p className="border-2 border-border p-4 text-sm">{t.staff.noBookings}</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Termin</TableHead>
-              <TableHead>Lekarz</TableHead>
-              <TableHead>Pacjent</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t.staff.colTime}</TableHead>
+              <TableHead>{t.staff.colDoctor}</TableHead>
+              <TableHead>{t.staff.colPatient}</TableHead>
+              <TableHead>{t.staff.colStatus}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {bookings.map((b, i) => (
               <TableRow key={`${b.start_time}-${i}`}>
                 <TableCell className="font-bold tabular-nums">
-                  {formatSlotLabel(b.start_time)}
+                  {formatSlotLabel(b.start_time, locale)}
                 </TableCell>
                 <TableCell>{doctorName(b.doctors)}</TableCell>
                 <TableCell>{b.patient_name}</TableCell>

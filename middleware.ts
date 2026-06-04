@@ -8,11 +8,11 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Wszystko poza:
+     * Everything except:
      * - _next/static, _next/image
      * - favicon.ico
-     * - api/webhooks/* (webhook Stripe nie moze ruszac cookies/sesji)
-     * - pliki statyczne
+     * - api/webhooks/* (the Stripe webhook must not touch cookies/session)
+     * - static files
      */
     "/((?!_next/static|_next/image|favicon.ico|api/webhooks|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],

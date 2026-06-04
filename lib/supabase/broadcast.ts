@@ -1,7 +1,7 @@
 /**
- * Server-side Broadcast przez REST API Realtime.
- * Nie otwieramy websocketu w funkcji serverless — wysylamy pojedynczy POST.
- * Kanal jest PUBLICZNY, payload bez PII (tylko start_time).
+ * Server-side Broadcast via the Realtime REST API.
+ * No websocket is opened inside a serverless function — we send a single POST.
+ * The channel is PUBLIC, the payload carries no PII (only start_time).
  */
 
 export type BroadcastEvent = "taken" | "freed";
@@ -17,7 +17,7 @@ export async function broadcastSlot(params: {
   event: BroadcastEvent;
 }): Promise<void> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  // service-role lub anon — broadcast publiczny akceptuje oba
+  // service-role or anon — a public broadcast accepts either
   const key =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -42,6 +42,6 @@ export async function broadcastSlot(params: {
       }),
     });
   } catch {
-    // Broadcast to best-effort UX. Porazka nie moze wywrocic bookingu.
+    // Broadcast is best-effort UX. A failure must not break the booking.
   }
 }

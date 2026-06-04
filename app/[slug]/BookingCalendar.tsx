@@ -7,6 +7,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { channelName } from "@/lib/supabase/broadcast";
 import type { DaySlots } from "@/lib/slots";
 import { formatSlotLabel } from "@/lib/slots";
+import type { Dict, Locale } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +20,9 @@ type Props = {
   tenantId: string;
   doctors: DoctorLite[];
   days: DaySlots[];
-  initialTaken: string[]; // klucze "doctorId|isoUtc"
+  initialTaken: string[]; // keys "doctorId|isoUtc"
+  locale: Locale;
+  dict: Dict;
 };
 
 type Selected = { doctorId: string; doctorName: string; startTime: string } | null;
@@ -28,25 +31,32 @@ function key(doctorId: string, iso: string): string {
   return `${doctorId}|${iso}`;
 }
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+function SubmitButton({ idle, pending }: { idle: string; pending: string }) {
+  const { pending: isPending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full">
-      {pending ? "Przekierowanie..." : "Zarezerwuj i zaplac"}
+    <Button type="submit" disabled={isPending} className="w-full">
+      {isPending ? pending : idle}
     </Button>
   );
 }
 
-export function BookingCalendar({ slug, tenantId, doctors, days, initialTaken }: Props) {
+export function BookingCalendar({
+  slug,
+  tenantId,
+  doctors,
+  days,
+  initialTaken,
+  locale,
+  dict,
+}: Props) {
   const [taken, setTaken] = useState<Set<string>>(() => new Set(initialTaken));
   const [selected, setSelected] = useState<Selected>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const [state, formAction] = useFormState<BookingState, FormData>(createBooking, {
     error: null,
   });
 
-  // Realtime: subskrypcja Broadcast per lekarz. Anon klient, kanal publiczny.
+  // Realtime: Broadcast subscription per doctor. Anon client, public channel.
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     const channels = doctors.map((doc) => {
@@ -97,9 +107,9 @@ export function BookingCalendar({ slug, tenantId, doctors, days, initialTaken }:
   return (
     <div className="space-y-8 pb-40">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        Wolne terminy:{" "}
-        <span className="font-bold text-foreground">{totalAvailable}</span> · aktualizacja
-        na zywo
+        {dict.booking.freeSlots}{" "}
+        <span className="font-bold text-foreground">{totalAvailable}</span>{" "}
+        {dict.booking.liveUpdate}
       </p>
 
       {doctors.map((doc) => (
@@ -123,14 +133,13 @@ export function BookingCalendar({ slug, tenantId, doctors, days, initialTaken }:
                         key={slot.startTime}
                         type="button"
                         disabled={isTaken}
-                        onClick={() => {
-                          setNotice(null);
+                        onClick={() =>
                           setSelected({
                             doctorId: doc.id,
                             doctorName: doc.name,
                             startTime: slot.startTime,
-                          });
-                        }}
+                          })
+                        }
                         className={[
                           "border-2 border-border px-1 py-1 text-xs font-bold tabular-nums transition-none",
                           isTaken
@@ -145,9 +154,7 @@ export function BookingCalendar({ slug, tenantId, doctors, days, initialTaken }:
                     );
                   })}
                   {day.slots.length === 0 && (
-                    <span className="text-center text-[10px] text-muted-foreground">
-                      —
-                    </span>
+                    <span className="text-center text-[10px] text-muted-foreground">—</span>
                   )}
                 </div>
               </div>
@@ -156,17 +163,15 @@ export function BookingCalendar({ slug, tenantId, doctors, days, initialTaken }:
         </section>
       ))}
 
-      {/* Panel rezerwacji — sticky na dole gdy slot wybrany */}
+      {/* Booking panel — sticky at the bottom when a slot is selected */}
       {selected && (
         <div className="fixed inset-x-0 bottom-0 z-10 border-t-2 border-border bg-background">
           <div className="mx-auto max-w-5xl p-4">
             {selectedTaken ? (
               <div className="flex items-center justify-between gap-4">
-                <p className="text-sm font-bold uppercase">
-                  Ten slot zostal wlasnie zajety. Wybierz inny.
-                </p>
+                <p className="text-sm font-bold uppercase">{dict.booking.slotTaken}</p>
                 <Button variant="outline" onClick={() => setSelected(null)}>
-                  Zamknij
+                  {dict.common.close}
                 </Button>
               </div>
             ) : (
@@ -177,35 +182,31 @@ export function BookingCalendar({ slug, tenantId, doctors, days, initialTaken }:
 
                 <div className="text-sm">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Wybrany termin
+                    {dict.booking.selectedSlot}
                   </p>
                   <p className="font-bold">
-                    {selected.doctorName} · {formatSlotLabel(selected.startTime)}
+                    {selected.doctorName} · {formatSlotLabel(selected.startTime, locale)}
                   </p>
                 </div>
 
                 <div className="flex-1">
-                  <Label htmlFor="patientName">Imie i nazwisko</Label>
+                  <Label htmlFor="patientName">{dict.booking.patientName}</Label>
                   <Input
                     id="patientName"
                     name="patientName"
                     required
                     minLength={2}
                     autoComplete="name"
-                    placeholder="Jan Kowalski"
+                    placeholder={dict.booking.patientPlaceholder}
                     className="mt-1"
                   />
                 </div>
 
                 <div className="flex gap-2 sm:w-64">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setSelected(null)}
-                  >
-                    Anuluj
+                  <Button type="button" variant="outline" onClick={() => setSelected(null)}>
+                    {dict.common.cancel}
                   </Button>
-                  <SubmitButton />
+                  <SubmitButton idle={dict.booking.bookAndPay} pending={dict.booking.redirecting} />
                 </div>
               </form>
             )}
@@ -215,7 +216,6 @@ export function BookingCalendar({ slug, tenantId, doctors, days, initialTaken }:
                 {state.error}
               </p>
             )}
-            {notice && <p className="mt-2 text-xs font-bold uppercase">{notice}</p>}
           </div>
         </div>
       )}

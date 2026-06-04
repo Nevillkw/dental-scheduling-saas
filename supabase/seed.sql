@@ -1,6 +1,6 @@
 -- =============================================================================
--- SEED — 2 tenanty + lekarze. Idempotentny (mozna uruchamiac wielokrotnie).
--- Uruchom PO schema.sql.
+-- SEED — 2 tenants + doctors. Idempotent (safe to run multiple times).
+-- Run AFTER schema.sql.
 -- =============================================================================
 
 insert into tenants (name, slug) values
@@ -21,14 +21,14 @@ where not exists (
 );
 
 -- =============================================================================
--- KONTA PERSONELU (zakladane RECZNIE — brak UI tozsamosci).
+-- STAFF ACCOUNTS (created MANUALLY — no identity UI).
 --
 -- 1) Supabase Dashboard -> Authentication -> Users -> "Add user":
---      alfa@klinika.test  /  haslo
---      beta@klinika.test  /  haslo
---    (zaznacz "Auto Confirm User").
+--      alfa@klinika.test  /  password
+--      beta@klinika.test  /  password
+--    (tick "Auto Confirm User").
 --
--- 2) Powiaz konto z tenantem (tenant_id ląduje w JWT app_metadata):
+-- 2) Link the account to a tenant (tenant_id lands in the JWT app_metadata):
 --
 --    update auth.users
 --    set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
@@ -42,6 +42,6 @@ where not exists (
 --             (select id from tenants where slug = 'klinika-beta'))
 --    where email = 'beta@klinika.test';
 --
--- 3) Po zmianie app_metadata uzytkownik musi zalogowac sie ponownie,
---    aby nowy JWT zawieral claim tenant_id.
+-- 3) After changing app_metadata the user must sign in again so the new JWT
+--    contains the tenant_id claim.
 -- =============================================================================

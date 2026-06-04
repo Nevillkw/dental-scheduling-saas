@@ -1,9 +1,9 @@
-// End-to-end test logiki (bez UI). Uruchom przy DZIALAJACYM dev serverze:
+// End-to-end logic test (no UI). Run with a LIVE target (local or production):
 //   node --env-file=.env.local scripts/full-loop-test.mjs
 //
-// Testuje: book_slot (pending) -> blokada double-bookingu (23505) ->
-// realna sesja Stripe -> podpisany webhook completed -> status 'confirmed' ->
-// replay webhooka (idempotencja). Na koncu sprzata wiersz testowy.
+// Tests: book_slot (pending) -> double-booking guard (23505) -> real Stripe
+// session -> signed completed webhook -> status 'confirmed' -> webhook replay
+// (idempotency). Cleans up the test row at the end.
 
 import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
@@ -54,7 +54,7 @@ async function statusOf(id) {
 async function main() {
   console.log("== Full-loop test ==");
 
-  // tenant + lekarz
+  // tenant + doctor
   const { data: tenant } = await sb
     .from("tenants")
     .select("id, name")
@@ -66,9 +66,9 @@ async function main() {
     .eq("tenant_id", tenant.id)
     .limit(1)
     .single();
-  console.log(`Tenant: ${tenant.name} | Lekarz: ${doctor.name}`);
+  console.log(`Tenant: ${tenant.name} | Doctor: ${doctor.name}`);
 
-  // unikalny slot w przyszlosci (omijamy walidacje gridu — to test RPC)
+  // unique future slot (skips grid validation — this tests the RPC)
   const startTime = new Date(
     Date.now() + 180 * 86400000 + Math.floor(Math.random() * 1e7)
   ).toISOString();
@@ -77,22 +77,22 @@ async function main() {
   const { data: bookingId, error: e1 } = await sb.rpc("book_slot", {
     p_tenant_id: tenant.id,
     p_doctor_id: doctor.id,
-    p_patient_name: "Test Pacjent",
+    p_patient_name: "Test Patient",
     p_start_time: startTime,
   });
-  check("book_slot zwraca id (pending)", !e1 && typeof bookingId === "string");
+  check("book_slot returns id (pending)", !e1 && typeof bookingId === "string");
   check("status = pending", (await statusOf(bookingId)) === "pending");
 
-  // B) drugi booking tego samego slotu -> 23505
+  // B) second booking for the same slot -> 23505
   const { error: e2 } = await sb.rpc("book_slot", {
     p_tenant_id: tenant.id,
     p_doctor_id: doctor.id,
-    p_patient_name: "Drugi Pacjent",
+    p_patient_name: "Second Patient",
     p_start_time: startTime,
   });
-  check("double-booking zablokowany (23505)", e2?.code === "23505");
+  check("double-booking blocked (23505)", e2?.code === "23505");
 
-  // C) realna sesja Stripe + zapis session.id
+  // C) real Stripe session + save session.id
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     client_reference_id: bookingId,
@@ -103,35 +103,35 @@ async function main() {
         price_data: {
           currency: "pln",
           unit_amount: 15000,
-          product_data: { name: `Wizyta — ${doctor.name}` },
+          product_data: { name: `Visit — ${doctor.name}` },
         },
       },
     ],
     success_url: `${APP}/klinika-alfa/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${APP}/klinika-alfa/cancel`,
   });
-  check("sesja Stripe utworzona", !!session.id && !!session.url);
+  check("Stripe session created", !!session.id && !!session.url);
   await sb.from("bookings").update({ stripe_session_id: session.id }).eq("id", bookingId);
 
-  // D) podpisany webhook completed -> confirmed
+  // D) signed completed webhook -> confirmed
   const code1 = await postWebhook(session.id);
-  check("webhook completed -> HTTP 200", code1 === 200);
+  check("completed webhook -> HTTP 200", code1 === 200);
   check("status = confirmed", (await statusOf(bookingId)) === "confirmed");
 
-  // E) replay tego samego webhooka -> nadal confirmed, bez bledu
+  // E) replay the same webhook -> still confirmed, no error
   const code2 = await postWebhook(session.id);
-  check("replay webhooka -> HTTP 200 (idempotentny)", code2 === 200);
-  check("status nadal confirmed", (await statusOf(bookingId)) === "confirmed");
+  check("webhook replay -> HTTP 200 (idempotent)", code2 === 200);
+  check("status still confirmed", (await statusOf(bookingId)) === "confirmed");
 
-  // F) sprzatanie
+  // F) cleanup
   await sb.from("bookings").delete().eq("id", bookingId);
-  check("wiersz testowy usuniety", (await statusOf(bookingId)) === null);
+  check("test row deleted", (await statusOf(bookingId)) === null);
 
-  console.log(`\n== Wynik: ${pass} PASS / ${fail} FAIL ==`);
+  console.log(`\n== Result: ${pass} PASS / ${fail} FAIL ==`);
   process.exit(fail === 0 ? 0 : 1);
 }
 
 main().catch((err) => {
-  console.error("Blad testu:", err);
+  console.error("Test error:", err);
   process.exit(1);
 });
