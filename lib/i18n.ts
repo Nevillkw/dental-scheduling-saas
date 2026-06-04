@@ -20,6 +20,10 @@ export type Dict = {
     close: string;
     cancel: string;
     logout: string;
+    navBack: string;
+    navForward: string;
+    toClinics: string;
+    toCalendar: string;
   };
   home: {
     badge: string;
@@ -99,6 +103,10 @@ const pl: Dict = {
     close: "Zamknij",
     cancel: "Anuluj",
     logout: "Wyloguj",
+    navBack: "Wstecz",
+    navForward: "Dalej",
+    toClinics: "Kliniki",
+    toCalendar: "Kalendarz",
   },
   home: {
     badge: "Multi-tenant SaaS · demo",
@@ -180,6 +188,10 @@ const en: Dict = {
     close: "Close",
     cancel: "Cancel",
     logout: "Sign out",
+    navBack: "Back",
+    navForward: "Forward",
+    toClinics: "Clinics",
+    toCalendar: "Calendar",
   },
   home: {
     badge: "Multi-tenant SaaS · demo",

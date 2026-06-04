@@ -1,0 +1,47 @@
+name: Deploy to Vercel (Production)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Project identifiers are not secret. Only VERCEL_TOKEN is a secret.
+env:
+  VERCEL_ORG_ID: team_9mubNqyGS6UJ9RCvMbbXfQo9
+  VERCEL_PROJECT_ID: prj_n8nlxb4Ne9PibCiPeYAopbnwbBYi
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Gate the deploy on the secret so the run stays green until it is set.
+      - id: guard
+        run: |
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::VERCEL_TOKEN not set — skipping deploy. Add it in Settings → Secrets → Actions."
+          fi
+
+      - name: Install Vercel CLI
+        if: steps.guard.outputs.ok == 'true'
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel env (production)
+        if: steps.guard.outputs.ok == 'true'
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        if: steps.guard.outputs.ok == 'true'
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy (prebuilt)
+        if: steps.guard.outputs.ok == 'true'
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

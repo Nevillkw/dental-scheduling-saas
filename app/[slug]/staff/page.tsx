@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
@@ -6,6 +7,7 @@ import { getServiceClient } from "@/lib/supabase/service";
 import { formatSlotLabel } from "@/lib/slots";
 import { getDictionary, getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { NavButtons } from "@/components/NavButtons";
 import {
   Table,
   TableBody,
@@ -57,7 +59,16 @@ export default async function StaffPage({ params }: Props) {
   if (!user) {
     return (
       <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-4 px-4">
-        <div className="flex w-full max-w-sm justify-end">
+        <div className="flex w-full max-w-sm items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <NavButtons back={t.common.navBack} forward={t.common.navForward} />
+            <Link
+              href={`/${slug}`}
+              className="border-2 border-border px-3 py-1 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+            >
+              ← {t.common.toCalendar}
+            </Link>
+          </div>
           <LanguageSwitcher locale={locale} />
         </div>
         <LoginForm slug={slug} dict={t.staff} />
@@ -76,12 +87,20 @@ export default async function StaffPage({ params }: Props) {
           <p className="mt-2 text-sm">
             {t.staff.accessDeniedBody.replace("{clinic}", tenant.name)}
           </p>
-          <form action={signOut} className="mt-4">
-            <input type="hidden" name="slug" value={slug} />
-            <Button type="submit" variant="outline">
-              {t.common.logout}
-            </Button>
-          </form>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <Link
+              href={`/${slug}`}
+              className="border-2 border-border px-3 py-2 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+            >
+              ← {t.common.toCalendar}
+            </Link>
+            <form action={signOut}>
+              <input type="hidden" name="slug" value={slug} />
+              <Button type="submit" variant="outline">
+                {t.common.logout}
+              </Button>
+            </form>
+          </div>
         </div>
       </main>
     );
@@ -98,6 +117,19 @@ export default async function StaffPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <NavButtons back={t.common.navBack} forward={t.common.navForward} />
+          <Link
+            href={`/${slug}`}
+            className="border-2 border-border px-3 py-1 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+          >
+            ← {t.common.toCalendar}
+          </Link>
+        </div>
+        <LanguageSwitcher locale={locale} />
+      </div>
+
       <header className="mb-6 flex items-end justify-between gap-4 border-b-2 border-border pb-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -105,15 +137,12 @@ export default async function StaffPage({ params }: Props) {
           </p>
           <h1 className="text-3xl font-bold uppercase tracking-tight">{tenant.name}</h1>
         </div>
-        <div className="flex items-center gap-3">
-          <LanguageSwitcher locale={locale} />
-          <form action={signOut}>
-            <input type="hidden" name="slug" value={slug} />
-            <Button type="submit" variant="outline">
-              {t.common.logout}
-            </Button>
-          </form>
-        </div>
+        <form action={signOut}>
+          <input type="hidden" name="slug" value={slug} />
+          <Button type="submit" variant="outline">
+            {t.common.logout}
+          </Button>
+        </form>
       </header>
 
       <h2 className="mb-3 text-sm font-bold uppercase tracking-wide">{t.staff.upcoming}</h2>

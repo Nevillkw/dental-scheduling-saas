@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getServiceClient } from "@/lib/supabase/service";
 import { getDictionary, getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { NavButtons } from "@/components/NavButtons";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +28,13 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-16">
-      <div className="mb-1 flex items-start justify-between gap-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          {t.home.badge}
-        </p>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <NavButtons back={t.common.navBack} forward={t.common.navForward} />
         <LanguageSwitcher locale={locale} />
       </div>
+      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        {t.home.badge}
+      </p>
       <h1 className="text-4xl font-bold uppercase tracking-tight">{t.home.title}</h1>
       <p className="mt-4 max-w-prose text-sm">{t.home.intro}</p>
 

@@ -6,6 +6,7 @@ import { getServiceClient } from "@/lib/supabase/service";
 import { generateGrid } from "@/lib/slots";
 import { getDictionary, getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { NavButtons } from "@/components/NavButtons";
 import { BookingCalendar } from "./BookingCalendar";
 
 // Time- and DB-dependent — no static prerender.
@@ -61,6 +62,19 @@ export default async function ClinicPage({ params }: PageProps) {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <NavButtons back={t.common.navBack} forward={t.common.navForward} />
+          <Link
+            href="/"
+            className="border-2 border-border px-3 py-1 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+          >
+            ← {t.common.toClinics}
+          </Link>
+        </div>
+        <LanguageSwitcher locale={locale} />
+      </div>
+
       <header className="mb-8 flex items-end justify-between gap-4 border-b-2 border-border pb-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -68,15 +82,12 @@ export default async function ClinicPage({ params }: PageProps) {
           </p>
           <h1 className="text-3xl font-bold uppercase tracking-tight">{tenant.name}</h1>
         </div>
-        <div className="flex items-center gap-3">
-          <LanguageSwitcher locale={locale} />
-          <Link
-            href={`/${slug}/staff`}
-            className="border-2 border-border px-3 py-2 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
-          >
-            {t.clinic.staffPanelLink}
-          </Link>
-        </div>
+        <Link
+          href={`/${slug}/staff`}
+          className="border-2 border-border px-3 py-2 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+        >
+          {t.clinic.staffPanelLink}
+        </Link>
       </header>
 
       {!doctors || doctors.length === 0 ? (

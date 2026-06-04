@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { getDictionary, getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
+import { NavButtons } from "@/components/NavButtons";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +12,21 @@ type Props = {
 };
 
 export default function SuccessPage({ params, searchParams }: Props) {
-  const t = getDictionary(getLocaleFromCookie(cookies().get(LOCALE_COOKIE)?.value)).success;
+  const d = getDictionary(getLocaleFromCookie(cookies().get(LOCALE_COOKIE)?.value));
+  const t = d.success;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
+      <div className="mb-4 flex w-full items-center justify-between gap-2">
+        <NavButtons back={d.common.navBack} forward={d.common.navForward} />
+        <Link
+          href="/"
+          className="border-2 border-border px-3 py-1 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+        >
+          ← {d.common.toClinics}
+        </Link>
+      </div>
+
       <div className="w-full border-2 border-border p-8 shadow-brutal">
         <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
           {t.status}
