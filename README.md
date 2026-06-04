@@ -1,5 +1,7 @@
 # Dental Scheduling SaaS — multi-tenant
 
+**Live:** https://dental-scheduling-saas.vercel.app · **Repo:** https://github.com/Nevillkw/dental-scheduling-saas
+
 Production-ready rdzeń systemu rezerwacji wizyt dla wielu klinik (multi-tenant),
 zbudowany wg [`SPEC.md`](./SPEC.md). Demonstruje 4 kompetencje:
 
@@ -112,6 +114,25 @@ Karta testowa Stripe: `4242 4242 4242 4242`, dowolna przyszła data, dowolny CVC
 
 ### Panel personelu
 Logowanie e-mail/hasło (Supabase Auth, SSR cookies) → read-only tabela nadchodzących wizyt. Odczyt **bezpośredni** przez authenticated client; **RLS-JWT** gwarantuje, że `klinika-alfa` nie widzi danych `klinika-beta`. Bez realtime, bez CRUD.
+
+---
+
+## Deployment (Vercel)
+
+Live: **https://dental-scheduling-saas.vercel.app** (wdrożone przez `vercel --prod`).
+
+Zmienne środowiskowe ustawione w projekcie Vercel (Production): `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`,
+`STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_APP_URL`.
+
+- **Webhook produkcyjny** to osobny endpoint w Stripe (Test Mode) na
+  `https://<domena>/api/webhooks/stripe` (zdarzenia `checkout.session.completed`,
+  `checkout.session.expired`). Jego `whsec` to **inny** sekret niż lokalny `stripe listen`.
+- `success_url` / `cancel_url` liczone są z nagłówków żądania, więc działają na każdej
+  domenie Vercel (produkcja i preview).
+- **Auto-deploy z GitHuba:** zainstaluj aplikację Vercel dla repo w *Settings → Git*
+  (repo jest pod kontem GitHub innym niż team Vercel — wymaga ręcznej autoryzacji).
+  Bez tego wdrażasz CLI: `vercel --prod`.
 
 ---
 
