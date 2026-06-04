@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 
 import { getServiceClient } from "@/lib/supabase/service";
 import { getStripe, CONSULTATION_AMOUNT_GROSZE, CONSULTATION_CURRENCY } from "@/lib/stripe";
@@ -10,6 +11,20 @@ import { generateGrid } from "@/lib/slots";
 export type BookingState = { error: string | null };
 
 const POSTGRES_UNIQUE_VIOLATION = "23505";
+
+/**
+ * Origin aplikacji z naglowkow zadania — dziala na kazdej domenie Vercel
+ * (produkcja i preview). Fallback na env / localhost dla pewnosci.
+ */
+function resolveAppUrl(): string {
+  const h = headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (host) {
+    const proto = h.get("x-forwarded-proto") ?? "https";
+    return `${proto}://${host}`;
+  }
+  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+}
 
 /**
  * Server Action bookingu (anon, autorytatywnie po stronie serwera).
@@ -77,7 +92,7 @@ export async function createBooking(
   }
 
   const id = bookingId as string;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = resolveAppUrl();
 
   // 5) Stripe Checkout Session. Pending juz trzyma slot przez index.
   let checkoutUrl: string;
