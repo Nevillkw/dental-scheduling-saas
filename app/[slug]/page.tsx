@@ -7,6 +7,7 @@ import { generateGrid } from "@/lib/slots";
 import { getDictionary, getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NavButtons } from "@/components/NavButtons";
+import { DemoBanner } from "@/components/DemoBanner";
 import { BookingCalendar } from "./BookingCalendar";
 
 // Time- and DB-dependent — no static prerender.
@@ -89,6 +90,8 @@ export default async function ClinicPage({ params }: PageProps) {
           {t.clinic.staffPanelLink}
         </Link>
       </header>
+
+      <DemoBanner dict={t.demo} slug={slug} />
 
       {!doctors || doctors.length === 0 ? (
         <p className="border-2 border-border p-4 text-sm">{t.clinic.noDoctors}</p>

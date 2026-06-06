@@ -8,6 +8,7 @@ import { formatSlotLabel } from "@/lib/slots";
 import { getDictionary, getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NavButtons } from "@/components/NavButtons";
+import { DemoBanner } from "@/components/DemoBanner";
 import {
   Table,
   TableBody,
@@ -70,6 +71,9 @@ export default async function StaffPage({ params }: Props) {
             </Link>
           </div>
           <LanguageSwitcher locale={locale} />
+        </div>
+        <div className="w-full max-w-sm">
+          <DemoBanner dict={t.demo} slug={slug} />
         </div>
         <LoginForm slug={slug} dict={t.staff} />
       </main>

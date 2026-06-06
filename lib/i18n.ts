@@ -95,6 +95,13 @@ export type Dict = {
   stripe: {
     visit: string; // product name prefix, e.g. "Visit"
   };
+  demo: {
+    badge: string;
+    testCard: string;
+    staff: string;
+    openPanel: string;
+    noCharge: string;
+  };
 };
 
 const pl: Dict = {
@@ -180,6 +187,13 @@ const pl: Dict = {
   stripe: {
     visit: "Wizyta",
   },
+  demo: {
+    badge: "Demo · tryb testowy",
+    testCard: "Karta testowa",
+    staff: "Personel",
+    openPanel: "Otwórz panel →",
+    noCharge: "Bez prawdziwych opłat.",
+  },
 };
 
 const en: Dict = {
@@ -264,6 +278,13 @@ const en: Dict = {
   },
   stripe: {
     visit: "Visit",
+  },
+  demo: {
+    badge: "Demo · test mode",
+    testCard: "Test card",
+    staff: "Staff",
+    openPanel: "Open panel →",
+    noCharge: "No real charges.",
   },
 };
 

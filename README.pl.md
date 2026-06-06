@@ -14,6 +14,33 @@ zbudowany wg [`SPEC.md`](./SPEC.md). Demonstruje 4 kompetencje:
 
 UI jest **dwujęzyczne (PL/EN)** z przełącznikiem (język zapamiętany w cookie).
 
+## 🔎 Sprawdź na żywo
+
+Bez instalacji — wszystko jest wdrożone i działa w **trybie testowym Stripe** (bez prawdziwych opłat).
+
+**1. Zarezerwuj wizytę**
+- Otwórz klinikę: [Klinika Alfa](https://dental-scheduling-saas.vercel.app/klinika-alfa) · [Klinika Beta](https://dental-scheduling-saas.vercel.app/klinika-beta)
+- Wybierz wolny termin, wpisz dowolne imię, kliknij **Zarezerwuj i zapłać**.
+- W Stripe zapłać kartą testową **`4242 4242 4242 4242`**, dowolna przyszła data ważności, dowolny CVC.
+- Wrócisz na stronę potwierdzenia; rezerwacja potwierdza się automatycznie (webhook Stripe).
+
+**2. Zobacz w panelu personelu**
+
+| Klinika | Panel personelu | Email | Hasło |
+|---|---|---|---|
+| Alfa | [/klinika-alfa/staff](https://dental-scheduling-saas.vercel.app/klinika-alfa/staff) | `alfa@klinika.test` | `test` |
+| Beta | [/klinika-beta/staff](https://dental-scheduling-saas.vercel.app/klinika-beta/staff) | `beta@klinika.test` | `test` |
+
+Każda klinika widzi **tylko swoje** wizyty (twarda izolacja po stronie bazy). Zaloguj się do Alfy, a nie zobaczysz wizyt Bety.
+
+**3. Zobacz realtime** — otwórz tę samą klinikę w dwóch oknach obok siebie; zarezerwuj termin w jednym, a w drugim zniknie natychmiast.
+
+**4. Dodatki** — przełącznik **PL / EN** w prawym górnym rogu; przyciski **← Wstecz / Dalej →** poruszają się po historii.
+
+> Na żywo karta testowa i loginy demo pokazują się też w banerze na stronie, więc każdy może spróbować bez czytania tego pliku.
+
+---
+
 ## Stack
 
 - Next.js 14 (App Router, TypeScript)
@@ -183,5 +210,7 @@ supabase/
   seed.sql                      # 2 tenanty + lekarze + instrukcja kont
 scripts/
   full-loop-test.mjs            # test logiki end-to-end
+  seed-demo-bookings.mjs        # seed przykładowych wizyt (confirmed)
+components/DemoBanner.tsx         # baner demo (karta + loginy), gated NEXT_PUBLIC_DEMO
 middleware.ts                    # odświeżanie sesji personelu
 ```

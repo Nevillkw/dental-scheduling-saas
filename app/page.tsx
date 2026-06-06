@@ -3,8 +3,10 @@ import { cookies } from "next/headers";
 
 import { getServiceClient } from "@/lib/supabase/service";
 import { getDictionary, getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
+import { DEMO_DEFAULT_SLUG } from "@/lib/demo";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NavButtons } from "@/components/NavButtons";
+import { DemoBanner } from "@/components/DemoBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -36,9 +38,11 @@ export default async function HomePage() {
         {t.home.badge}
       </p>
       <h1 className="text-4xl font-bold uppercase tracking-tight">{t.home.title}</h1>
-      <p className="mt-4 max-w-prose text-sm">{t.home.intro}</p>
+      <p className="mb-6 mt-4 max-w-prose text-sm">{t.home.intro}</p>
 
-      <h2 className="mt-10 border-b-2 border-border pb-2 text-sm font-bold uppercase tracking-wide">
+      <DemoBanner dict={t.demo} slug={DEMO_DEFAULT_SLUG} />
+
+      <h2 className="mt-4 border-b-2 border-border pb-2 text-sm font-bold uppercase tracking-wide">
         {t.home.clinicsHeading}
       </h2>
 

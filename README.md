@@ -14,6 +14,33 @@ A production-ready core of a multi-tenant dental appointment booking system, bui
 
 The UI ships **bilingual (PL/EN)** with a switcher (cookie-persisted locale).
 
+## 🔎 Try it live
+
+No setup needed — it's deployed and runs in **Stripe test mode** (no real charges).
+
+**1. Book an appointment**
+- Open a clinic: [Alfa Clinic](https://dental-scheduling-saas.vercel.app/klinika-alfa) · [Beta Clinic](https://dental-scheduling-saas.vercel.app/klinika-beta)
+- Pick a free time slot, type any name, click **Book and pay**.
+- On Stripe, pay with the test card **`4242 4242 4242 4242`**, any future expiry date, any CVC.
+- You return to a confirmation page; the booking is confirmed automatically (Stripe webhook).
+
+**2. See it in the staff panel**
+
+| Clinic | Staff panel | Email | Password |
+|---|---|---|---|
+| Alfa | [/klinika-alfa/staff](https://dental-scheduling-saas.vercel.app/klinika-alfa/staff) | `alfa@klinika.test` | `test` |
+| Beta | [/klinika-beta/staff](https://dental-scheduling-saas.vercel.app/klinika-beta/staff) | `beta@klinika.test` | `test` |
+
+Each clinic sees **only its own** appointments (strict isolation enforced by the database). Sign in to Alfa and you won't see Beta's bookings.
+
+**3. See real-time in action** — open the same clinic in two browser windows side by side; book a slot in one and it disappears in the other instantly.
+
+**4. Extras** — top-right **PL / EN** toggle switches language; **← Back / Forward →** buttons navigate history.
+
+> On the live site the test card and demo logins are also shown in a banner, so anyone can try it without reading this.
+
+---
+
 ## Stack
 
 - Next.js 14 (App Router, TypeScript)
@@ -183,5 +210,7 @@ supabase/
   seed.sql                      # 2 tenants + doctors + staff-account instructions
 scripts/
   full-loop-test.mjs            # end-to-end logic test
+  seed-demo-bookings.mjs        # seed example confirmed bookings
+components/DemoBanner.tsx         # demo hint (test card + logins), gated by NEXT_PUBLIC_DEMO
 middleware.ts                    # staff session refresh
 ```
