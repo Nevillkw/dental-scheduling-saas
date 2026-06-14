@@ -5,7 +5,7 @@ import { getLocaleFromCookie, LOCALE_COOKIE } from "@/lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://dental-scheduling-saas.vercel.app"),
+  metadataBase: new URL("https://dental.arturmrowicki.pl"),
   title: "DENTAL // Booking — multi-tenant SaaS demo",
   description:
     "Multi-tenant dental appointment booking. Strict RLS isolation, atomic double-booking prevention, live availability (Broadcast), Stripe Checkout. Next.js 14 + Supabase.",
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "DENTAL // Booking — multi-tenant SaaS demo",
     description:
       "Strict multi-tenant isolation, atomic double-booking, live availability, Stripe Checkout. Next.js 14 + Supabase.",
-    url: "https://dental-scheduling-saas.vercel.app",
+    url: "https://dental.arturmrowicki.pl",
     siteName: "Dental Scheduling SaaS",
     type: "website",
   },

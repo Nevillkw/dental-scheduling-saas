@@ -2,7 +2,7 @@
 
 **Język:** [English](./README.md) · Polski
 
-**Live:** https://dental-scheduling-saas.vercel.app · **Repo:** https://github.com/Nevillkw/dental-scheduling-saas
+**Live:** https://dental.arturmrowicki.pl · **Repo:** https://github.com/Nevillkw/dental-scheduling-saas
 
 Production-ready rdzeń systemu rezerwacji wizyt dla wielu klinik (multi-tenant),
 zbudowany wg [`SPEC.md`](./SPEC.md). Demonstruje 4 kompetencje:
@@ -19,7 +19,7 @@ UI jest **dwujęzyczne (PL/EN)** z przełącznikiem (język zapamiętany w cooki
 Bez instalacji — wszystko jest wdrożone i działa w **trybie testowym Stripe** (bez prawdziwych opłat).
 
 **1. Zarezerwuj wizytę**
-- Otwórz klinikę: [Klinika Alfa](https://dental-scheduling-saas.vercel.app/klinika-alfa) · [Klinika Beta](https://dental-scheduling-saas.vercel.app/klinika-beta)
+- Otwórz klinikę: [Klinika Alfa](https://dental.arturmrowicki.pl/klinika-alfa) · [Klinika Beta](https://dental.arturmrowicki.pl/klinika-beta)
 - Wybierz wolny termin, wpisz dowolne imię, kliknij **Zarezerwuj i zapłać**.
 - W Stripe zapłać kartą testową **`4242 4242 4242 4242`**, dowolna przyszła data ważności, dowolny CVC.
 - Wrócisz na stronę potwierdzenia; rezerwacja potwierdza się automatycznie (webhook Stripe).
@@ -28,8 +28,8 @@ Bez instalacji — wszystko jest wdrożone i działa w **trybie testowym Stripe*
 
 | Klinika | Panel personelu | Email | Hasło |
 |---|---|---|---|
-| Alfa | [/klinika-alfa/staff](https://dental-scheduling-saas.vercel.app/klinika-alfa/staff) | `alfa@klinika.test` | `test` |
-| Beta | [/klinika-beta/staff](https://dental-scheduling-saas.vercel.app/klinika-beta/staff) | `beta@klinika.test` | `test` |
+| Alfa | [/klinika-alfa/staff](https://dental.arturmrowicki.pl/klinika-alfa/staff) | `alfa@klinika.test` | `test` |
+| Beta | [/klinika-beta/staff](https://dental.arturmrowicki.pl/klinika-beta/staff) | `beta@klinika.test` | `test` |
 
 Każda klinika widzi **tylko swoje** wizyty (twarda izolacja po stronie bazy). Zaloguj się do Alfy, a nie zobaczysz wizyt Bety.
 
@@ -158,7 +158,7 @@ Cookie (`locale`) trzyma język; Server Components czytają je i przekazują wyc
 
 ## Deployment (Vercel)
 
-Live: **https://dental-scheduling-saas.vercel.app** (wdrożone przez `vercel --prod`).
+Live: **https://dental.arturmrowicki.pl** (wdrożone przez `vercel --prod`).
 
 Zmienne środowiskowe ustawione w projekcie Vercel (Production): `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`,

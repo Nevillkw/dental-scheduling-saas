@@ -2,7 +2,7 @@
 
 **Language:** English · [Polski](./README.pl.md)
 
-**Live:** https://dental-scheduling-saas.vercel.app · **Repo:** https://github.com/Nevillkw/dental-scheduling-saas
+**Live:** https://dental.arturmrowicki.pl · **Repo:** https://github.com/Nevillkw/dental-scheduling-saas
 
 A production-ready core of a multi-tenant dental appointment booking system, built per
 [`SPEC.md`](./SPEC.md). It demonstrates 4 competencies:
@@ -19,7 +19,7 @@ The UI ships **bilingual (PL/EN)** with a switcher (cookie-persisted locale).
 No setup needed — it's deployed and runs in **Stripe test mode** (no real charges).
 
 **1. Book an appointment**
-- Open a clinic: [Alfa Clinic](https://dental-scheduling-saas.vercel.app/klinika-alfa) · [Beta Clinic](https://dental-scheduling-saas.vercel.app/klinika-beta)
+- Open a clinic: [Alfa Clinic](https://dental.arturmrowicki.pl/klinika-alfa) · [Beta Clinic](https://dental.arturmrowicki.pl/klinika-beta)
 - Pick a free time slot, type any name, click **Book and pay**.
 - On Stripe, pay with the test card **`4242 4242 4242 4242`**, any future expiry date, any CVC.
 - You return to a confirmation page; the booking is confirmed automatically (Stripe webhook).
@@ -28,8 +28,8 @@ No setup needed — it's deployed and runs in **Stripe test mode** (no real char
 
 | Clinic | Staff panel | Email | Password |
 |---|---|---|---|
-| Alfa | [/klinika-alfa/staff](https://dental-scheduling-saas.vercel.app/klinika-alfa/staff) | `alfa@klinika.test` | `test` |
-| Beta | [/klinika-beta/staff](https://dental-scheduling-saas.vercel.app/klinika-beta/staff) | `beta@klinika.test` | `test` |
+| Alfa | [/klinika-alfa/staff](https://dental.arturmrowicki.pl/klinika-alfa/staff) | `alfa@klinika.test` | `test` |
+| Beta | [/klinika-beta/staff](https://dental.arturmrowicki.pl/klinika-beta/staff) | `beta@klinika.test` | `test` |
 
 Each clinic sees **only its own** appointments (strict isolation enforced by the database). Sign in to Alfa and you won't see Beta's bookings.
 
@@ -158,7 +158,7 @@ A cookie (`locale`) holds the language; Server Components read it and pass the d
 
 ## Deployment (Vercel)
 
-Live: **https://dental-scheduling-saas.vercel.app** (deployed via `vercel --prod`).
+Live: **https://dental.arturmrowicki.pl** (deployed via `vercel --prod`).
 
 Environment variables set in the Vercel project (Production): `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`,
