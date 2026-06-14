@@ -34,33 +34,33 @@ export default async function HomePage() {
         <NavButtons back={t.common.navBack} forward={t.common.navForward} />
         <LanguageSwitcher locale={locale} />
       </div>
-      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {t.home.badge}
       </p>
-      <h1 className="text-4xl font-bold uppercase tracking-tight">{t.home.title}</h1>
+      <h1 className="text-4xl font-semibold uppercase tracking-tight">{t.home.title}</h1>
       <p className="mb-6 mt-4 max-w-prose text-sm">{t.home.intro}</p>
 
       <DemoBanner dict={t.demo} slug={DEMO_DEFAULT_SLUG} />
 
-      <h2 className="mt-4 border-b-2 border-border pb-2 text-sm font-bold uppercase tracking-wide">
+      <h2 className="mt-4 border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide">
         {t.home.clinicsHeading}
       </h2>
 
       {configError ? (
-        <p className="mt-4 border-2 border-border bg-secondary p-4 text-sm">
+        <p className="mt-4 border border-border bg-secondary p-4 text-sm">
           {t.home.configError}
         </p>
       ) : tenants.length === 0 ? (
-        <p className="mt-4 border-2 border-border p-4 text-sm">{t.home.noTenants}</p>
+        <p className="mt-4 border border-border p-4 text-sm">{t.home.noTenants}</p>
       ) : (
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {tenants.map((tenant) => (
             <li key={tenant.slug}>
               <Link
                 href={`/${tenant.slug}`}
-                className="flex items-center justify-between border-2 border-border p-4 shadow-brutal-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                className="flex items-center justify-between border border-border p-4 transition-colors hover:bg-secondary"
               >
-                <span className="font-bold uppercase tracking-wide">{tenant.name}</span>
+                <span className="font-semibold uppercase tracking-wide">{tenant.name}</span>
                 <span className="text-xs text-muted-foreground">/{tenant.slug} →</span>
               </Link>
             </li>

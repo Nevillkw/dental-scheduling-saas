@@ -18,7 +18,7 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="flex border-2 border-border" role="group" aria-label="Language">
+    <div className="flex border border-border" role="group" aria-label="Language">
       {LOCALES.map((l) => (
         <button
           key={l}
@@ -26,7 +26,7 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
           onClick={() => setLocale(l)}
           aria-pressed={l === locale}
           className={[
-            "px-2 py-1 text-xs font-bold uppercase",
+            "px-2 py-1 text-xs font-semibold uppercase",
             l === locale ? "bg-primary text-primary-foreground" : "bg-background hover:bg-secondary",
           ].join(" ")}
         >

@@ -1,8 +1,8 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Brutalist theme: black / white / gray only, square corners (radius 0),
- * thick hard borders, no soft shadows.
+ * Minimalist neutral theme: white surfaces, near-black text (#0a0a0a),
+ * thin neutral-gray borders, subtly rounded form controls, flat (no shadows).
  */
 const config: Config = {
   darkMode: ["class"],
@@ -14,39 +14,32 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        border: "hsl(0 0% 0%)",
-        input: "hsl(0 0% 0%)",
-        ring: "hsl(0 0% 0%)",
+        border: "hsl(0 0% 90%)", // neutral-200
+        input: "hsl(0 0% 83%)", // neutral-300
+        ring: "hsl(0 0% 9%)", // neutral-900
         background: "hsl(0 0% 100%)",
-        foreground: "hsl(0 0% 0%)",
+        foreground: "hsl(0 0% 4%)", // ~#0a0a0a
         primary: {
-          DEFAULT: "hsl(0 0% 0%)",
-          foreground: "hsl(0 0% 100%)",
+          DEFAULT: "hsl(0 0% 9%)", // neutral-900
+          foreground: "hsl(0 0% 98%)", // neutral-50
         },
         secondary: {
-          DEFAULT: "hsl(0 0% 96%)",
-          foreground: "hsl(0 0% 0%)",
+          DEFAULT: "hsl(0 0% 96%)", // neutral-100
+          foreground: "hsl(0 0% 9%)",
         },
         muted: {
-          DEFAULT: "hsl(0 0% 90%)",
-          foreground: "hsl(0 0% 35%)",
+          DEFAULT: "hsl(0 0% 96%)", // neutral-100
+          foreground: "hsl(0 0% 45%)", // neutral-500
         },
         destructive: {
-          DEFAULT: "hsl(0 0% 0%)",
-          foreground: "hsl(0 0% 100%)",
+          DEFAULT: "hsl(0 0% 96%)", // subtle, not alarming
+          foreground: "hsl(0 0% 35%)", // neutral-600/700
         },
       },
-      borderRadius: {
-        none: "0",
-        sm: "0",
-        md: "0",
-        lg: "0",
-        xl: "0",
-        full: "0",
-      },
       boxShadow: {
-        brutal: "4px 4px 0 0 hsl(0 0% 0%)",
-        "brutal-sm": "2px 2px 0 0 hsl(0 0% 0%)",
+        // Flat theme: brutalist shadows neutralized so existing usages render nothing.
+        brutal: "none",
+        "brutal-sm": "none",
       },
       fontFamily: {
         mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],

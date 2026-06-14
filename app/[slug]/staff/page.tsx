@@ -65,7 +65,7 @@ export default async function StaffPage({ params }: Props) {
             <NavButtons back={t.common.navBack} forward={t.common.navForward} />
             <Link
               href={`/${slug}`}
-              className="border-2 border-border px-3 py-1 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+              className="border border-border px-3 py-1 text-xs font-semibold uppercase tracking-wide hover:bg-secondary"
             >
               ← {t.common.toCalendar}
             </Link>
@@ -86,15 +86,15 @@ export default async function StaffPage({ params }: Props) {
   if (claimTenant !== tenant.id) {
     return (
       <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-4 px-4 text-center">
-        <div className="border-2 border-border p-8 shadow-brutal">
-          <h1 className="text-2xl font-bold uppercase">{t.staff.accessDenied}</h1>
+        <div className="border border-border p-8">
+          <h1 className="text-2xl font-semibold uppercase">{t.staff.accessDenied}</h1>
           <p className="mt-2 text-sm">
             {t.staff.accessDeniedBody.replace("{clinic}", tenant.name)}
           </p>
           <div className="mt-4 flex items-center justify-center gap-2">
             <Link
               href={`/${slug}`}
-              className="border-2 border-border px-3 py-2 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+              className="border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-secondary"
             >
               ← {t.common.toCalendar}
             </Link>
@@ -126,7 +126,7 @@ export default async function StaffPage({ params }: Props) {
           <NavButtons back={t.common.navBack} forward={t.common.navForward} />
           <Link
             href={`/${slug}`}
-            className="border-2 border-border px-3 py-1 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+            className="border border-border px-3 py-1 text-xs font-semibold uppercase tracking-wide hover:bg-secondary"
           >
             ← {t.common.toCalendar}
           </Link>
@@ -134,12 +134,12 @@ export default async function StaffPage({ params }: Props) {
         <LanguageSwitcher locale={locale} />
       </div>
 
-      <header className="mb-6 flex items-end justify-between gap-4 border-b-2 border-border pb-4">
+      <header className="mb-6 flex items-end justify-between gap-4 border-b border-border pb-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {t.staff.panelLabel.replace("{email}", user.email ?? "")}
           </p>
-          <h1 className="text-3xl font-bold uppercase tracking-tight">{tenant.name}</h1>
+          <h1 className="text-3xl font-semibold uppercase tracking-tight">{tenant.name}</h1>
         </div>
         <form action={signOut}>
           <input type="hidden" name="slug" value={slug} />
@@ -149,12 +149,12 @@ export default async function StaffPage({ params }: Props) {
         </form>
       </header>
 
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide">{t.staff.upcoming}</h2>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide">{t.staff.upcoming}</h2>
 
       {error ? (
-        <p className="border-2 border-border p-4 text-sm">{t.staff.readError}</p>
+        <p className="border border-border p-4 text-sm">{t.staff.readError}</p>
       ) : !bookings || bookings.length === 0 ? (
-        <p className="border-2 border-border p-4 text-sm">{t.staff.noBookings}</p>
+        <p className="border border-border p-4 text-sm">{t.staff.noBookings}</p>
       ) : (
         <Table>
           <TableHeader>
@@ -168,13 +168,13 @@ export default async function StaffPage({ params }: Props) {
           <TableBody>
             {bookings.map((b, i) => (
               <TableRow key={`${b.start_time}-${i}`}>
-                <TableCell className="font-bold tabular-nums">
+                <TableCell className="font-semibold tabular-nums">
                   {formatSlotLabel(b.start_time, locale)}
                 </TableCell>
                 <TableCell>{doctorName(b.doctors)}</TableCell>
                 <TableCell>{b.patient_name}</TableCell>
                 <TableCell>
-                  <span className="border-2 border-border px-2 py-0.5 text-xs font-bold uppercase">
+                  <span className="border border-border px-2 py-0.5 text-xs font-semibold uppercase">
                     {b.status}
                   </span>
                 </TableCell>

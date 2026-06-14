@@ -12,27 +12,27 @@ export function DemoBanner({ dict, slug }: { dict: Dict["demo"]; slug: string })
   const staff = DEMO_STAFF[slug];
 
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 border-2 border-dashed border-border bg-secondary px-3 py-2 text-xs">
-      <span className="border-2 border-border bg-primary px-1.5 py-0.5 font-bold uppercase tracking-wide text-primary-foreground">
+    <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 border border-dashed border-border bg-secondary px-3 py-2 text-xs">
+      <span className="border border-border bg-primary px-1.5 py-0.5 font-semibold uppercase tracking-wide text-primary-foreground">
         {dict.badge}
       </span>
 
       <span>
         <span className="text-muted-foreground">{dict.testCard}:</span>{" "}
-        <span className="font-bold tabular-nums">{DEMO_TEST_CARD}</span>
+        <span className="font-semibold tabular-nums">{DEMO_TEST_CARD}</span>
       </span>
 
       {staff && (
         <>
           <span>
             <span className="text-muted-foreground">{dict.staff}:</span>{" "}
-            <span className="font-bold">{staff.email}</span>
+            <span className="font-semibold">{staff.email}</span>
             {" / "}
-            <span className="font-bold">{staff.password}</span>
+            <span className="font-semibold">{staff.password}</span>
           </span>
           <Link
             href={`/${slug}/staff`}
-            className="font-bold uppercase tracking-wide underline underline-offset-2"
+            className="font-semibold uppercase tracking-wide underline underline-offset-2"
           >
             {dict.openPanel}
           </Link>

@@ -108,19 +108,19 @@ export function BookingCalendar({
     <div className="space-y-8 pb-40">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">
         {dict.booking.freeSlots}{" "}
-        <span className="font-bold text-foreground">{totalAvailable}</span>{" "}
+        <span className="font-semibold text-foreground">{totalAvailable}</span>{" "}
         {dict.booking.liveUpdate}
       </p>
 
       {doctors.map((doc) => (
-        <section key={doc.id} className="border-2 border-border">
-          <h2 className="border-b-2 border-border bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary-foreground">
+        <section key={doc.id} className="border border-border">
+          <h2 className="border-b border-border bg-primary px-4 py-2 text-sm font-semibold uppercase tracking-wide text-primary-foreground">
             {doc.name}
           </h2>
           <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-3 md:grid-cols-5">
             {days.map((day) => (
               <div key={day.dateKey} className="bg-background p-2">
-                <div className="mb-2 text-center text-xs font-bold uppercase tracking-wide">
+                <div className="mb-2 text-center text-xs font-semibold uppercase tracking-wide">
                   {day.label}
                 </div>
                 <div className="flex flex-col gap-1">
@@ -141,7 +141,7 @@ export function BookingCalendar({
                           })
                         }
                         className={[
-                          "border-2 border-border px-1 py-1 text-xs font-bold tabular-nums transition-none",
+                          "border border-border px-1 py-1 text-xs font-semibold tabular-nums transition-colors",
                           isTaken
                             ? "cursor-not-allowed bg-muted text-muted-foreground line-through"
                             : isSelected
@@ -165,11 +165,11 @@ export function BookingCalendar({
 
       {/* Booking panel — sticky at the bottom when a slot is selected */}
       {selected && (
-        <div className="fixed inset-x-0 bottom-0 z-10 border-t-2 border-border bg-background">
+        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background">
           <div className="mx-auto max-w-5xl p-4">
             {selectedTaken ? (
               <div className="flex items-center justify-between gap-4">
-                <p className="text-sm font-bold uppercase">{dict.booking.slotTaken}</p>
+                <p className="text-sm font-semibold uppercase">{dict.booking.slotTaken}</p>
                 <Button variant="outline" onClick={() => setSelected(null)}>
                   {dict.common.close}
                 </Button>
@@ -184,7 +184,7 @@ export function BookingCalendar({
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">
                     {dict.booking.selectedSlot}
                   </p>
-                  <p className="font-bold">
+                  <p className="font-semibold">
                     {selected.doctorName} · {formatSlotLabel(selected.startTime, locale)}
                   </p>
                 </div>
@@ -212,7 +212,7 @@ export function BookingCalendar({
             )}
 
             {state.error && !selectedTaken && (
-              <p className="mt-2 border-2 border-border bg-destructive px-3 py-2 text-xs font-bold uppercase text-destructive-foreground">
+              <p className="mt-2 border border-border bg-destructive px-3 py-2 text-xs font-semibold uppercase text-destructive-foreground">
                 {state.error}
               </p>
             )}

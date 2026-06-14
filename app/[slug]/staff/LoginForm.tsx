@@ -25,15 +25,15 @@ export function LoginForm({ slug, dict }: { slug: string; dict: Dict["staff"] })
   return (
     <form
       action={formAction}
-      className="w-full max-w-sm space-y-4 border-2 border-border p-6 shadow-brutal"
+      className="w-full max-w-sm space-y-4 border border-border p-6"
     >
       <input type="hidden" name="slug" value={slug} />
 
       <div>
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           {dict.loginHeading}
         </p>
-        <h1 className="text-2xl font-bold uppercase tracking-tight">{dict.loginTitle}</h1>
+        <h1 className="text-2xl font-semibold uppercase tracking-tight">{dict.loginTitle}</h1>
       </div>
 
       <div className="space-y-1">
@@ -53,7 +53,7 @@ export function LoginForm({ slug, dict }: { slug: string; dict: Dict["staff"] })
       </div>
 
       {state.error && (
-        <p className="border-2 border-border bg-destructive px-3 py-2 text-xs font-bold uppercase text-destructive-foreground">
+        <p className="border border-border bg-destructive px-3 py-2 text-xs font-semibold uppercase text-destructive-foreground">
           {state.error}
         </p>
       )}

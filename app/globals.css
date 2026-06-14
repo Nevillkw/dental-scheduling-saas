@@ -7,11 +7,15 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-mono antialiased;
+    @apply bg-background text-foreground antialiased;
   }
 }
 
-/* Brutalist baseline: hard edges, no smoothing. */
-html {
-  -webkit-font-smoothing: antialiased;
+/* Minimalist neutral theme: light surfaces, thin gray borders, flat. */
+:root {
+  color-scheme: light;
+}
+::selection {
+  background: #000000;
+  color: #ffffff;
 }

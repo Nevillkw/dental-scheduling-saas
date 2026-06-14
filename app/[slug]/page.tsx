@@ -68,7 +68,7 @@ export default async function ClinicPage({ params }: PageProps) {
           <NavButtons back={t.common.navBack} forward={t.common.navForward} />
           <Link
             href="/"
-            className="border-2 border-border px-3 py-1 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+            className="border border-border px-3 py-1 text-xs font-semibold uppercase tracking-wide hover:bg-secondary"
           >
             ← {t.common.toClinics}
           </Link>
@@ -76,16 +76,16 @@ export default async function ClinicPage({ params }: PageProps) {
         <LanguageSwitcher locale={locale} />
       </div>
 
-      <header className="mb-8 flex items-end justify-between gap-4 border-b-2 border-border pb-4">
+      <header className="mb-8 flex items-end justify-between gap-4 border-b border-border pb-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {t.clinic.bookingHeading}
           </p>
-          <h1 className="text-3xl font-bold uppercase tracking-tight">{tenant.name}</h1>
+          <h1 className="text-3xl font-semibold uppercase tracking-tight">{tenant.name}</h1>
         </div>
         <Link
           href={`/${slug}/staff`}
-          className="border-2 border-border px-3 py-2 text-xs font-bold uppercase tracking-wide hover:bg-secondary"
+          className="border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-secondary"
         >
           {t.clinic.staffPanelLink}
         </Link>
@@ -94,7 +94,7 @@ export default async function ClinicPage({ params }: PageProps) {
       <DemoBanner dict={t.demo} slug={slug} />
 
       {!doctors || doctors.length === 0 ? (
-        <p className="border-2 border-border p-4 text-sm">{t.clinic.noDoctors}</p>
+        <p className="border border-border p-4 text-sm">{t.clinic.noDoctors}</p>
       ) : (
         <BookingCalendar
           slug={slug}

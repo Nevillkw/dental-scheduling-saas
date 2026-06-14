@@ -1,6 +1,6 @@
 /**
  * Re-renders on every navigation, so each route entry gets a subtle
- * fade/slide-in — smooth transitions without leaving the brutalist look.
+ * fade/slide-in — smooth transitions that keep the minimalist look.
  */
 export default function Template({ children }: { children: React.ReactNode }) {
   return (
